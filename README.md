@@ -57,6 +57,58 @@ Se algo der errado no login/cadastro, rode `npm run check` e veja a seção
 
 ## 3. Deploy na Vercel
 
+### Checklist obrigatório (é o que faz login/cadastro funcionarem)
+
+O site publica sozinho a cada push, mas **sem as etapas 1 a 3 o login sempre
+falha**. Faça nesta ordem:
+
+**1) Criar o banco (Neon é o mais simples e tem plano grátis)**
+1. Acesse [neon.tech](https://neon.tech) → *Create a project* (região: a mais
+   próxima, ex. `AWS - São Paulo` ou `Frankfurt`).
+2. No painel do projeto, copie a **Connection string** (a versão "pooled"
+   também serve). Ela vem assim:
+   `postgresql://usuario:senha@ep-xxx.neon.tech/neondb`
+3. Deixe-a com SSL no final: `...neondb?sslmode=require`
+   (Supabase exige `?sslmode=require`; se usar o *pooler* do Supabase, use
+   `?sslmode=require&pgbouncer=true&connection_limit=1`).
+
+**2) Adicionar as variáveis na Vercel**
+1. Vercel → seu projeto **kami** → **Settings** → **Environment Variables**.
+2. Adicione as duas abaixo marcando **Production**, **Preview** e **Development**:
+
+   | Nome | Valor |
+   | --- | --- |
+   | `DATABASE_URL` | a connection string do passo 1 (com `?sslmode=require`) |
+   | `JWT_SECRET` | um texto aleatório longo — gere com `openssl rand -base64 48` |
+
+3. **Salve e faça um Redeploy**: variável de ambiente só vale para deploys
+   novos (Deployments → ⋯ → **Redeploy**).
+
+**3) Criar as tabelas no banco (só uma vez)**
+
+Opção fácil, sem instalar nada: no seu computador, com Node instalado:
+
+```bash
+npx prisma db push
+# quando perguntar, ou se preferir direto:
+DATABASE_URL="postgresql://usuario:senha@ep-xxx.neon.tech/neondb?sslmode=require" npx prisma db push
+```
+
+> Alternativa sem terminal: Vercel → **Settings** → **Build & Development
+> Settings** → *Build Command* → `npx prisma db push && npm run build`, faça o
+> deploy e depois **volte o Build Command para o padrão**.
+
+**4) Conferir**
+
+Abra `https://SEU-DOMINIO/api/health`. Deve responder:
+
+```json
+{ "ok": true, "checks": { "DATABASE_URL": "ok", "JWT_SECRET": "ok", "conexao": "ok", "tabelas": "ok", "sessao": "ok" } }
+```
+
+Se algum item vier diferente de `ok`, a tabela da
+[seção 7](#7-solução-de-problemas-login-e-cadastro) diz o que fazer.
+
 ### Opção A — pelo painel da Vercel
 1. Suba esta pasta para um repositório no GitHub (ou GitLab/Bitbucket).
 2. Em [vercel.com/new](https://vercel.com/new), importe o repositório.
@@ -65,9 +117,7 @@ Se algo der errado no login/cadastro, rode `npm run check` e veja a seção
    - `DATABASE_URL` — sua connection string do Postgres
    - `JWT_SECRET` — um valor aleatório forte
 5. Clique em **Deploy**.
-6. Depois do primeiro deploy, rode `npx prisma db push` **uma vez** apontando
-   para o banco de produção (pode ser da sua máquina local, usando a mesma
-   `DATABASE_URL` de produção no seu `.env`) para criar as tabelas.
+6. Faça o passo **3** do checklist acima para criar as tabelas.
 
 ### Opção B — pela CLI da Vercel
 ```bash
