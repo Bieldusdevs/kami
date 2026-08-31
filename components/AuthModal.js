@@ -15,6 +15,8 @@ import { useUser } from "@/context/UserContext";
 export default function AuthModal() {
   const { authOpen, authTab, closeAuth, login, register } = useUser();
   const [tab, setTab] = useState(authTab);
+  const [discordErr, setDiscordErr] = useState("");
+  const [discordOk, setDiscordOk] = useState("");
 
   const [loginUser, setLoginUser] = useState("");
   const [loginPass, setLoginPass] = useState("");
@@ -27,8 +29,21 @@ export default function AuthModal() {
   const [cadErr, setCadErr] = useState("");
   const [cadBusy, setCadBusy] = useState(false);
 
+  // Tabs: "login", "cadastro", "discord"
   if (authOpen && tab !== authTab) setTab(authTab);
   if (!authOpen) return null;
+
+  // Read the ?discord_connected=1 query param from the callback redirect
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("discord_connected") === "1") {
+      setDiscordOk("Conta do Discord vinculada com sucesso!");
+      // Remove the param so it doesn't persist
+      const newUrl = new URL(window.location.href);
+      newUrl.search.delete("discord_connected");
+      window.history.replaceState({}, document.title, newUrl.toString());
+    }
+  }, []);
 
   async function handleLogin() {
     setLoginErr("");
@@ -103,6 +118,12 @@ export default function AuthModal() {
             className={`flex-1 py-2.5 text-[13px] ${tab === "cadastro" ? "bg-blue text-white" : "text-muted"}`}
           >
             Cadastrar
+          </button>
+          <button
+            onClick={() => setTab("discord")}
+            className={`flex-1 py-2.5 text-[13px] ${tab === "discord" ? "bg-green-600 text-white" : "text-muted"}`}
+          >
+            Conectar Discord
           </button>
         </div>
 
@@ -208,6 +229,39 @@ export default function AuthModal() {
             </div>
           </div>
         )}
+        {tab === "discord" ? (
+          <div>
+            <h3 className="text-[22px] mb-1.5">Conectar Discord</h3>
+            <div className="text-[13px] text-muted mb-6">
+              Autorize este site a acessar seu perfil do Discord para vinculá‑lo à sua conta Kamikaze.
+            </div>
+            <button
+              onClick={() => {
+                // Redireciona para o endpoint de início de OAuth do Discord
+                window.location.href = "/api/auth/discord/start";
+              }}
+              className="w-full px-5 py-2.5 text-[13.5px] font-semibold bg-green-600 border border-green-600 hover:bg-green-500 hover:border-green-500 transition-colors text-white"
+            >
+              Iniciar conexão com Discord
+            </button>
+            {discordErr && (
+              <div
+                role="alert"
+                className="text-danger text-[12.5px] mt-2.5 leading-relaxed break-words"
+              >
+                {discordErr}
+              </div>
+            )}
+            {discordOk && (
+              <div
+                role="alert"
+                className="text-ok text-[12.5px] mt-2.5 leading-relaxed break-words"
+              >
+                {discordOk}
+              </div>
+            )}
+          </div>
+        ) : null}
       </div>
     </div>
   );

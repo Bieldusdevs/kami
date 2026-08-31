@@ -27,6 +27,9 @@ model User {
   role         String    @default("Membro")
   createdAt    DateTime  @default(now())
 
+  // Identificador do Discord (opcional, único quando fornecido)
+  discordId    String?   @unique
+
   messages Message[]
   orders   Order[]
   applications Application[]
