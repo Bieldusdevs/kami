@@ -14,6 +14,7 @@ import { registerSchema } from "@/lib/validation";
 import { rateLimit, getClientIp } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function POST(req) {
   const ip = getClientIp(req);

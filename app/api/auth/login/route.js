@@ -14,6 +14,7 @@ import { loginSchema } from "@/lib/validation";
 import { rateLimit, getClientIp } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const GENERIC_ERROR = "Usuário ou senha incorretos.";
 

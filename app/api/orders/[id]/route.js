@@ -13,6 +13,7 @@ import { getSessionUserId } from "@/lib/auth";
 import { orderStatusSchema } from "@/lib/validation";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function PATCH(req, { params }) {
   const userId = getSessionUserId();

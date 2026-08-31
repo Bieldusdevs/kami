@@ -14,6 +14,7 @@ import { orderSchema } from "@/lib/validation";
 import { rateLimit, getClientIp } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   const orders = await prisma.order.findMany({
