@@ -79,20 +79,54 @@ export async function GET(req) {
     checks.tabelas === "ok" &&
     checks.sessao === "ok";
 
+  // Dicas específicas para cada item que falhou — é só seguir a lista.
+  const dicas = [];
+
+  if (checks.JWT_SECRET !== "ok") {
+    dicas.push(
+      "Falta JWT_SECRET. Na Vercel: Settings → Environment Variables → add " +
+        "JWT_SECRET (gere com `openssl rand -base64 48`), marque Production/Preview/Development e faça um Redeploy."
+    );
+  } else if (checks.sessao !== "ok") {
+    dicas.push(
+      "A sessão falhou: confira se JWT_SECRET foi salvo sem espaços/aspas extras e faça um Redeploy."
+    );
+  }
+
+  if (checks.DATABASE_URL !== "ok" && !demo) {
+    dicas.push(
+      'Falta DATABASE_URL. Na Vercel: Settings → Environment Variables → add DATABASE_URL ' +
+        'com a connection string do Neon/Supabase terminando em ?sslmode=require.'
+    );
+  }
+
+  if (checks.conexao !== "ok") {
+    dicas.push(
+      "A conexão com o banco falhou: confira usuário/senha/host e o ?sslmode=require na DATABASE_URL."
+    );
+  }
+
+  if (checks.tabelas !== "ok") {
+    dicas.push(
+      "As tabelas não existem. Rode `npx prisma db push` apontando para esse banco " +
+        "(ou cole o SQL de prisma/schema.sql no SQL Editor do Neon/Supabase) e faça um Redeploy."
+    );
+  }
+
+  if (dicas.length) {
+    dicas.push(
+      "Depois de mudar Environment Variables na Vercel é OBRIGATÓRIO fazer um Redeploy " +
+        "(Deployments → ⋯ → Redeploy), senão o deploy antigo continua rodando."
+    );
+  }
+
   return NextResponse.json(
     {
       ok,
       ambiente: process.env.NODE_ENV || "development",
       modo: demo ? "demonstração (banco em memória)" : "normal",
       checks,
-      dicas: ok
-        ? []
-        : [
-            "Crie um arquivo .env (ou configure as variáveis no painel da Vercel):",
-            '  DATABASE_URL="postgresql://usuario:senha@host:5432/kamikaze?sslmode=require"',
-            "  JWT_SECRET=\"cole um valor aleatório (openssl rand -base64 48)\"",
-            "Depois rode `npx prisma db push` para criar as tabelas e reinicie o servidor.",
-          ],
+      dicas,
     },
     { status: ok ? 200 : 503 }
   );
