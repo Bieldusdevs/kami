@@ -9,15 +9,21 @@
  */
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { errorResponse } from "@/lib/apiErrors";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const members = await prisma.user.findMany({
-    orderBy: { createdAt: "asc" },
-    select: { id: true, username: true, role: true, createdAt: true },
-  });
+  try {
+    const members = await prisma.user.findMany({
+      orderBy: { createdAt: "asc" },
+      select: { id: true, username: true, role: true, createdAt: true },
+    });
 
-  return NextResponse.json({ members });
+    return NextResponse.json({ members });
+  } catch (err) {
+    const { status, json } = errorResponse(err, "GET /api/members");
+    return NextResponse.json(json, { status });
+  }
 }

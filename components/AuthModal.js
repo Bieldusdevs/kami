@@ -32,23 +32,33 @@ export default function AuthModal() {
 
   async function handleLogin() {
     setLoginErr("");
-    if (!loginUser || !loginPass) {
+    const usuario = loginUser.trim();
+    if (!usuario || !loginPass) {
       setLoginErr("Preencha usuário e senha.");
       return;
     }
     setLoginBusy(true);
-    const res = await login(loginUser, loginPass);
-    setLoginBusy(false);
-    if (!res.ok) setLoginErr(res.error);
+    try {
+      const res = await login(usuario, loginPass);
+      if (!res || !res.ok) setLoginErr(res?.error || "Não foi possível entrar.");
+    } catch {
+      setLoginErr("Erro inesperado no navegador. Recarregue a página e tente de novo.");
+    } finally {
+      // Sempre libera o botão, mesmo se algo der errado — antes ele ficava
+      // preso em "Entrando...".
+      setLoginBusy(false);
+    }
   }
 
   async function handleCadastro() {
     setCadErr("");
-    if (!/^[a-zA-Z0-9_]{3,20}$/.test(cadUser)) {
+    const usuario = cadUser.trim();
+    const email = cadEmail.trim();
+    if (!/^[a-zA-Z0-9_]{3,20}$/.test(usuario)) {
       setCadErr("Usuário deve ter 3-20 caracteres (letras, números, _).");
       return;
     }
-    if (!cadEmail.includes("@")) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
       setCadErr("E-mail inválido.");
       return;
     }
@@ -57,9 +67,14 @@ export default function AuthModal() {
       return;
     }
     setCadBusy(true);
-    const res = await register(cadUser, cadEmail, cadPass);
-    setCadBusy(false);
-    if (!res.ok) setCadErr(res.error);
+    try {
+      const res = await register(usuario, email, cadPass);
+      if (!res || !res.ok) setCadErr(res?.error || "Não foi possível criar a conta.");
+    } catch {
+      setCadErr("Erro inesperado no navegador. Recarregue a página e tente de novo.");
+    } finally {
+      setCadBusy(false);
+    }
   }
 
   return (
@@ -94,13 +109,15 @@ export default function AuthModal() {
         {tab === "login" ? (
           <div>
             <h3 className="text-[22px] mb-1.5">Bem-vindo de volta</h3>
-            <div className="text-[13px] text-muted mb-6">Entre com seu usuário da Kamikaze.</div>
+            <div className="text-[13px] text-muted mb-6">
+              Entre com o seu usuário ou e-mail da Kamikaze.
+            </div>
 
             <div className="mb-4">
               <label className="block text-[12.5px] text-muted mb-1.5">Usuário</label>
               <input
                 type="text"
-                placeholder="seu_usuario"
+                placeholder="seu_usuario ou voce@email.com"
                 value={loginUser}
                 onChange={(e) => setLoginUser(e.target.value)}
                 className="w-full bg-bgAlt border border-lineStrong px-3.5 py-3 text-sm outline-none focus:border-blue-bright"
@@ -124,7 +141,14 @@ export default function AuthModal() {
             >
               {loginBusy ? "Entrando..." : "Entrar"}
             </button>
-            {loginErr && <div className="text-danger text-[12.5px] mt-2.5">{loginErr}</div>}
+            {loginErr && (
+              <div
+                role="alert"
+                className="text-danger text-[12.5px] mt-2.5 leading-relaxed break-words"
+              >
+                {loginErr}
+              </div>
+            )}
           </div>
         ) : (
           <div>
@@ -169,8 +193,15 @@ export default function AuthModal() {
             >
               {cadBusy ? "Criando..." : "Criar conta"}
             </button>
-            {cadErr && <div className="text-danger text-[12.5px] mt-2.5">{cadErr}</div>}
-            <div className="text-[11px] text-[#54607a] mt-4.5 leading-relaxed border-t border-line pt-4">
+            {cadErr && (
+              <div
+                role="alert"
+                className="text-danger text-[12.5px] mt-2.5 leading-relaxed break-words"
+              >
+                {cadErr}
+              </div>
+            )}
+            <div className="text-[11px] text-[#54607a] mt-4 leading-relaxed border-t border-line pt-4">
               🔒 Sua senha é protegida com hash bcrypt (12 rounds) antes de
               ser salva no banco — nunca em texto puro. A sessão usa cookie
               httpOnly, o que impede que scripts no navegador leiam o token.
