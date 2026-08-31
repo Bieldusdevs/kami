@@ -13,6 +13,8 @@ import { hashPassword, setSessionCookie } from "@/lib/auth";
 import { registerSchema } from "@/lib/validation";
 import { rateLimit, getClientKey } from "@/lib/rateLimit";
 import { errorResponse, isUniqueViolation } from "@/lib/apiErrors";
+import { applyOwnerBootstrap } from "@/lib/apiAuth";
+import { normalizeRole } from "@/lib/roles";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -92,9 +94,22 @@ export async function POST(req) {
       throw err;
     }
 
-    setSessionCookie(user.id, req);
+    // Se for o usuário definido em OWNER_USERNAME, já nasce Dono.
+    const finalUser = await applyOwnerBootstrap({ ...user, usernameLower });
 
-    return NextResponse.json({ user }, { status: 201 });
+    setSessionCookie(finalUser.id, req);
+
+    return NextResponse.json(
+      {
+        user: {
+          id: finalUser.id,
+          username: finalUser.username,
+          role: normalizeRole(finalUser.role),
+          createdAt: finalUser.createdAt,
+        },
+      },
+      { status: 201 }
+    );
   } catch (err) {
     const { status, json } = errorResponse(err, ROUTE);
     return NextResponse.json(json, { status });

@@ -11,8 +11,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useUser } from "@/context/UserContext";
-
-const GAMES = ["Valorant", "League of Legends", "CS2", "Genshin Impact", "World of Warcraft", "Outro"];
+import { useSettings } from "@/context/SettingsContext";
 const STATUS_STYLE = {
   pendente: "text-[#ffc857] border-[#ffc85755]",
   andamento: "text-blue-bright border-blue-bright",
@@ -25,10 +24,16 @@ function fmtDate(iso) {
 
 export default function FarmSection() {
   const { user, openAuth } = useUser();
+  const { games, settings } = useSettings();
   const [orders, setOrders] = useState(null);
-  const [form, setForm] = useState({ game: GAMES[0], item: "", qty: "", notes: "" });
+  const [form, setForm] = useState({ game: games[0] || "Outro", item: "", qty: "", notes: "" });
   const [err, setErr] = useState("");
   const [sending, setSending] = useState(false);
+
+  // Mantém o jogo selecionado válido quando o admin troca a lista.
+  useEffect(() => {
+    setForm((prev) => (games.includes(prev.game) ? prev : { ...prev, game: games[0] || "Outro" }));
+  }, [games]);
 
   const loadOrders = useCallback(async () => {
     try {
@@ -64,7 +69,7 @@ export default function FarmSection() {
         setErr(data.error || "Erro ao enviar pedido.");
         return;
       }
-      setForm({ game: GAMES[0], item: "", qty: "", notes: "" });
+      setForm({ game: games[0] || "Outro", item: "", qty: "", notes: "" });
       loadOrders();
     } catch {
       setErr("Erro de conexão. Tente novamente.");
@@ -84,6 +89,12 @@ export default function FarmSection() {
           Solicite o farm do seu personagem ou conta. O esquadrão pega o pedido e você acompanha o status em tempo real.
         </p>
       </div>
+
+      {(settings["farm.notice"] || "").trim() && (
+        <div className="mb-8 border border-lineStrong bg-panel px-5 py-3.5 text-[13px] text-blue-glow">
+          📌 {settings["farm.notice"]}
+        </div>
+      )}
 
       {!user ? (
         <div className="flex flex-col items-start gap-4 py-16 text-muted">
@@ -108,7 +119,7 @@ export default function FarmSection() {
                 onChange={(e) => setForm({ ...form, game: e.target.value })}
                 className="w-full bg-bgAlt border border-lineStrong px-3.5 py-3 text-sm outline-none focus:border-blue-bright"
               >
-                {GAMES.map((g) => (
+                {games.map((g) => (
                   <option key={g}>{g}</option>
                 ))}
               </select>

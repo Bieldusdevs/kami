@@ -55,12 +55,24 @@ export async function GET(req) {
 
   // 3. Tabelas criadas (precisa de `npx prisma db push`).
   if (checks.conexao === "ok") {
-    try {
-      await prisma.user.count();
-      checks.tabelas = "ok";
-    } catch (err) {
-      checks.tabelas = `falhou: ${String(err?.message || err).slice(0, 200)}`;
+    const faltando = [];
+    for (const [nome, modelo] of [
+      ["User", "user"],
+      ["Message", "message"],
+      ["Order", "order"],
+      ["Command", "command"],
+      ["DownloadFile", "downloadFile"],
+      ["Setting", "setting"],
+    ]) {
+      try {
+        await prisma[modelo].count();
+      } catch (err) {
+        faltando.push(nome);
+      }
     }
+    checks.tabelas = faltando.length
+      ? `faltam: ${faltando.join(", ")}`
+      : "ok";
   } else {
     checks.tabelas = "não verificado (sem conexão)";
   }
@@ -108,8 +120,8 @@ export async function GET(req) {
 
   if (checks.tabelas !== "ok") {
     dicas.push(
-      "As tabelas não existem. Rode `npx prisma db push` apontando para esse banco " +
-        "(ou cole o SQL de prisma/schema.sql no SQL Editor do Neon/Supabase) e faça um Redeploy."
+      `Tabelas pendentes (${checks.tabelas}). Rode \`npx prisma db push\` apontando para ` +
+        "esse banco (ou cole o SQL de prisma/schema.sql no SQL Editor do Neon/Supabase) e faça um Redeploy."
     );
   }
 

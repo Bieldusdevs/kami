@@ -13,6 +13,8 @@ import { verifyPassword, setSessionCookie } from "@/lib/auth";
 import { loginSchema } from "@/lib/validation";
 import { rateLimit, getClientKey } from "@/lib/rateLimit";
 import { errorResponse } from "@/lib/apiErrors";
+import { applyOwnerBootstrap } from "@/lib/apiAuth";
+import { normalizeRole } from "@/lib/roles";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -70,14 +72,17 @@ export async function POST(req) {
       );
     }
 
-    setSessionCookie(user.id, req);
+    // Se OWNER_USERNAME estiver definido no servidor, esse usuário é o Dono.
+    const finalUser = await applyOwnerBootstrap(user);
+
+    setSessionCookie(finalUser.id, req);
 
     return NextResponse.json({
       user: {
-        id: user.id,
-        username: user.username,
-        role: user.role,
-        createdAt: user.createdAt,
+        id: finalUser.id,
+        username: finalUser.username,
+        role: normalizeRole(finalUser.role),
+        createdAt: finalUser.createdAt,
       },
     });
   } catch (err) {

@@ -61,3 +61,44 @@ CREATE INDEX IF NOT EXISTS "Order_status_idx" ON "Order"("status");
 ALTER TABLE "Order" DROP CONSTRAINT IF EXISTS "Order_userId_fkey";
 ALTER TABLE "Order" ADD CONSTRAINT "Order_userId_fkey"
     FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- Comandos do FiveM (página /comandos)
+CREATE TABLE IF NOT EXISTS "Command" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT NOT NULL,
+    "category" TEXT NOT NULL DEFAULT 'geral',
+    "position" INTEGER NOT NULL DEFAULT 0,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Command_pkey" PRIMARY KEY ("id")
+);
+
+CREATE INDEX IF NOT EXISTS "Command_category_position_idx" ON "Command"("category", "position");
+
+-- Arquivos para download dos membros (página /arquivos)
+CREATE TABLE IF NOT EXISTS "DownloadFile" (
+    "id" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "type" TEXT NOT NULL DEFAULT 'citizen',
+    "url" TEXT NOT NULL,
+    "description" TEXT,
+    "version" TEXT,
+    "size" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "DownloadFile_pkey" PRIMARY KEY ("id")
+);
+
+CREATE INDEX IF NOT EXISTS "DownloadFile_type_createdAt_idx" ON "DownloadFile"("type", "createdAt");
+
+-- Configurações do site editáveis pelo painel admin
+CREATE TABLE IF NOT EXISTS "Setting" (
+    "key" TEXT NOT NULL,
+    "value" TEXT NOT NULL,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Setting_pkey" PRIMARY KEY ("key")
+);

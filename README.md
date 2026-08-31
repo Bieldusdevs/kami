@@ -143,13 +143,25 @@ app/
     orders/route.js          GET/POST — lista e cria pedidos de entrega de farm
     orders/[id]/route.js     PATCH — atualiza o status de um pedido
     members/route.js         GET  — lista os membros cadastrados
+    commands/route.js        GET/POST — comandos do FiveM
+    commands/[id]/route.js   PATCH/DELETE — editar/apagar comando (gerência)
+    files/route.js           GET (membros) / POST (gerência) — citizen, mod som
+    files/[id]/route.js      PATCH/DELETE — editar/apagar arquivo (gerência)
+    settings/route.js        GET (público) / PUT (gerência) — textos e jogos do site
+    admin/orders/route.js    GET  — todos os pedidos (gerência)
+    admin/orders/[id]/route.js  PATCH/DELETE — status e remoção (gerência)
+    admin/members/route.js   GET  — membros + cargos (gerência)
+    admin/members/[id]/route.js  PATCH — mudar cargo (só Dono)
+    admin/upload/route.js    POST — upload p/ Vercel Blob (se configurado)
     health/route.js          GET  — diagnóstico: env, conexão e tabelas
   layout.js                  Layout raiz + fontes + provedor de sessão
   page.js                    Monta a página inteira
   globals.css                Estilos globais (grid de fundo, kanji animado)
 
 components/                  Header, Hero, FarmSection, ChatSection,
-                              MembersSection, AuthModal, Footer, Logo
+                              MembersSection, AuthModal, Footer, Logo,
+                              AnnouncementBar, CommandsBoard, FilesBoard,
+                              admin/ (AdminPanel, OrdersTab, MembersTab)
 context/UserContext.js       Estado de sessão do usuário (client-side)
 lib/
   prisma.js                  Cliente Prisma singleton (falha com mensagem clara)
@@ -158,6 +170,10 @@ lib/
   validation.js               Schemas Zod
   rateLimit.js                Rate limit em memória
   apiErrors.js                Traduz erros de banco/config em respostas JSON
+  apiAuth.js                  Permissões das rotas (requireUser/Staff/Dono)
+  roles.js                    Cargos: Dono, Subdono, Gerente, Membro
+  settings.js                 Configurações do site editáveis pelo painel
+  clientApi.js                fetch seguro usado pelos componentes
 scripts/check-env.mjs        `npm run check` — diagnóstico do ambiente
 prisma/schema.prisma         Modelos User, Message, Order
 ```
@@ -202,6 +218,9 @@ Quase todo "erro ao entrar / ao cadastrar" vem de uma destas causas — abra
 | `Usuário ou senha incorretos` | dados diferentes do cadastro | o login aceita **usuário ou e-mail**; senhas têm no mínimo 6 caracteres |
 | `Muitas tentativas. Aguarde um minuto` (`RATE_LIMIT`) | mais de 10 logins (ou 5 cadastros) por minuto no mesmo IP | espere 1 minuto e tente de novo |
 | Entra, mas volta para deslogado | cookie de sessão com `Secure` em site HTTP | sirva o site em HTTPS ou defina `KAMI_COOKIE_SECURE=0` |
+| O botão "Painel" não aparece | seu cargo ainda é Membro | defina `OWNER_USERNAME` com seu usuário e faça Redeploy (ou `npm run set-role -- seu_usuario Dono`) |
+| Painel abre mas não salva nada | tabelas novas (`Command`, `DownloadFile`, `Setting`) não criadas | rode `npx prisma db push` de novo |
+| `Upload desativado` ao enviar arquivo | Vercel Blob não ativado | ative em Vercel → Storage → Blob, ou cadastre o arquivo por link |
 
 Comandos úteis:
 
@@ -236,3 +255,68 @@ KAMI_DEMO_DB=1 npm run dev
 Nesse modo os dados vivem apenas na memória do processo e **somem quando o
 servidor reinicia**. Não use em produção — o site em produção deve ter
 `DATABASE_URL` apontando para um Postgres de verdade.
+
+## 8. Painel admin, cargos, comandos e arquivos
+
+### Cargos e permissões
+
+| Cargo | O que pode fazer |
+| --- | --- |
+| **Dono** | Tudo, inclusive promover/rebaixar cargos |
+| **Subdono** | Tudo, menos mexer em cargos |
+| **Gerente** | Pedidos de farm, comandos, arquivos e textos do site |
+| **Membro** | Usar o site: pedir farm, baixar arquivos, conversar no chat |
+
+Quem é Gerente ou acima vê o botão **Painel** no topo e acessa `/admin`.
+
+### Como virar Dono na primeira vez
+
+Defina `OWNER_USERNAME` com o **seu usuário** (Vercel → Settings → Environment
+Variables) e faça um **Redeploy**. Ao entrar, sua conta vira Dono na hora.
+
+```bash
+OWNER_USERNAME="novak"
+```
+
+Alternativa pelo terminal (precisa da `DATABASE_URL` no `.env`):
+
+```bash
+npm run set-role -- novak Dono
+```
+
+### O que dá para fazer no painel (`/admin`)
+
+- **Pedidos de farm**: ver todos, filtrar por status, mudar
+  `pendente → andamento → concluido` e apagar
+- **Jogos e site**: trocar a lista de jogos do formulário de farm, o aviso do
+  topo, o texto de abertura, o link do Discord e os recados das seções
+- **Comandos FiveM**: cadastrar, editar e apagar comandos (com categoria)
+- **Arquivos**: publicar citizen, mod de som e outros — por link ou upload
+- **Cargos**: promover/rebaixar membros (somente Dono)
+
+### Páginas novas
+
+| Página | Quem vê | Para que serve |
+| --- | --- | --- |
+| `/comandos` | Todos | Lista de comandos do FiveM, com busca e categorias |
+| `/arquivos` | **Só membros logados** | Downloads de citizen, mod de som e outros |
+| `/admin` | Gerente, Subdono e Dono | Painel de administração |
+
+### Upload de arquivos
+
+O cadastro por **link** (Google Drive, Discord, MediaFire) funciona sempre.
+Para enviar o arquivo direto pelo painel, ative o **Vercel Blob** no projeto
+(Vercel → Storage → Create → Blob): a `BLOB_READ_WRITE_TOKEN` entra sozinha nas
+variáveis e o botão de upload passa a funcionar. Limite: ~4,5 MB por arquivo
+nas funções da Vercel — para arquivos maiores, use links.
+
+### Novas tabelas
+
+Esta versão adicionou `Command`, `DownloadFile` e `Setting`. Depois de
+atualizar o código, rode mais uma vez:
+
+```bash
+npx prisma db push
+```
+
+(sem isso, o `/api/health` acusa `Tabelas pendentes` e o painel não salva nada)

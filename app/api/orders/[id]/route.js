@@ -11,6 +11,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionUserId } from "@/lib/auth";
 import { orderStatusSchema } from "@/lib/validation";
+import { canManageContent, normalizeRole } from "@/lib/roles";
 import { errorResponse } from "@/lib/apiErrors";
 
 export const runtime = "nodejs";
@@ -30,11 +31,12 @@ export async function PATCH(req, { params }) {
 
     const requester = await prisma.user.findUnique({ where: { id: userId } });
     const isOwner = order.userId === userId;
-    const isAdmin = requester?.role === "Admin";
+    // Gerente, Subdono ou Dono podem alterar qualquer pedido.
+    const isStaff = canManageContent(normalizeRole(requester?.role));
 
-    if (!isOwner && !isAdmin) {
+    if (!isOwner && !isStaff) {
       return NextResponse.json(
-        { error: "Só quem criou o pedido (ou um admin) pode alterá-lo." },
+        { error: "Só quem criou o pedido (ou a gerência) pode alterá-lo." },
         { status: 403 }
       );
     }

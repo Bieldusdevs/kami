@@ -9,6 +9,7 @@
  */
 import "./globals.css";
 import { UserProvider } from "@/context/UserContext";
+import { SettingsProvider } from "@/context/SettingsContext";
 
 export const metadata = {
   title: "KAMIKAZE 神風 — Equipe",
@@ -27,7 +28,9 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body className="bg-bg text-ink font-body antialiased">
-        <UserProvider>{children}</UserProvider>
+        <SettingsProvider>
+          <UserProvider>{children}</UserProvider>
+        </SettingsProvider>
       </body>
     </html>
   );
