@@ -16,9 +16,11 @@ import { isStaff, ROLE_BADGE } from "@/lib/roles";
 import { apiGet, apiPost, apiPatch, apiPut, apiDelete } from "@/lib/clientApi";
 import OrdersTab from "./OrdersTab";
 import MembersTab from "./MembersTab";
+import ApprovalsTab from "./ApprovalsTab";
 
 const TABS = [
   { id: "pedidos", label: "Pedidos de farm", emoji: "📦" },
+  { id: "aprovacoes", label: "Aprovações", emoji: "✅" },
   { id: "site", label: "Jogos e site", emoji: "🎮" },
   { id: "comandos", label: "Comandos FiveM", emoji: "⌨️" },
   { id: "arquivos", label: "Arquivos", emoji: "📁" },
@@ -207,6 +209,8 @@ export default function AdminPanel() {
       </div>
 
       {tab === "pedidos" && <OrdersTab />}
+
+      {tab === "aprovacoes" && <ApprovalsTab />}
 
       {tab === "site" && (
         <form onSubmit={saveSite} className="max-w-[820px]">

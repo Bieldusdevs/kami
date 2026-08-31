@@ -301,6 +301,9 @@ npm run set-role -- novak Dono
 
 - **Pedidos de farm**: ver todos, filtrar por status, mudar
   `pendente → andamento → concluido` e apagar
+- **Aprovações**: decidir solicitações para entrar na equipe
+  (`aprovado`/`recusado`) ou apagar — a decisão é avisada no Discord quando o
+  webhook está configurado
 - **Jogos e site**: trocar a lista de jogos do formulário de farm, o aviso do
   topo, o texto de abertura, o link do Discord e os recados das seções
 - **Comandos FiveM**: cadastrar, editar e apagar comandos (com categoria)
@@ -315,6 +318,23 @@ npm run set-role -- novak Dono
 | `/arquivos` | **Só membros logados** | Downloads de citizen, mod de som e outros |
 | `/admin` | Gerente, Subdono e Dono | Painel de administração |
 
+### Recrutamento, Discord e comprovantes
+
+Na página inicial, a seção **Recrutamento** recebe solicitações para entrar
+na equipe (usuário do Discord + motivação + comprovante opcional em imagem).
+Quem já enviou acompanha o status no próprio site. A gerência decide na aba
+**Aprovações** do painel.
+
+Para a equipe receber avisos no Discord (nova solicitação, aprovação e
+recusa), defina no servidor:
+
+```bash
+DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/..."
+```
+
+Sem a variável o site funciona igual — os avisos simplesmente não são
+enviados.
+
 ### Upload de arquivos
 
 O cadastro por **link** (Google Drive, Discord, MediaFire) funciona sempre.
@@ -325,9 +345,10 @@ nas funções da Vercel — para arquivos maiores, use links.
 
 ### Novas tabelas (o site cria sozinho)
 
-Esta versão adicionou `Command`, `DownloadFile` e `Setting`. **Não é preciso
-fazer nada**: o site cria as que faltarem na primeira vez que o banco for
-usado (`lib/ensureTables.js`).
+Esta versão adicionou `Command`, `DownloadFile`, `Setting` e `Application`
+(solicitações de entrada na equipe). **Não é preciso fazer nada**: o site
+cria as que faltarem na primeira vez que o banco for usado
+(`lib/ensureTables.js`).
 
 Se preferir criar antes (ou se o usuário do banco não tiver permissão de
 criar tabelas), rode uma vez no seu computador:

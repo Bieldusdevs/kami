@@ -9,6 +9,7 @@
  */
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
+import DiscordNotice from "@/components/DiscordNotice";
 import FarmSection from "@/components/FarmSection";
 import ChatSection from "@/components/ChatSection";
 import MembersSection from "@/components/MembersSection";
@@ -21,6 +22,7 @@ export default function HomePage() {
       <div className="bg-grid" />
       <Header />
       <Hero />
+      <DiscordNotice />
       <FarmSection />
       <ChatSection />
       <MembersSection />
