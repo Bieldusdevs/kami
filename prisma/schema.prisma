@@ -29,6 +29,7 @@ model User {
 
   messages Message[]
   orders   Order[]
+  applications Application[]
 
   @@index([usernameLower])
 }
@@ -94,4 +95,22 @@ model Order {
 
   @@index([createdAt])
   @@index([status])
+}
+
+// Solicitações para entrar na equipe (aprovadas no painel → aba Aprovações)
+model Application {
+  id         String    @id @default(cuid())
+  discord    String
+  motivation String
+  proofUrl   String?
+  status     String    @default("pendente") // pendente | aprovado | recusado
+  decidedBy  String?
+  decidedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
 }

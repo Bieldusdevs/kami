@@ -11,10 +11,25 @@ import "./globals.css";
 import { UserProvider } from "@/context/UserContext";
 import { SettingsProvider } from "@/context/SettingsContext";
 
+// URL pública do site: usada para gerar os links absolutos das meta tags
+// (opengraph-image.jpg e icon.png são detectados automaticamente pelo Next
+// dentro da pasta app/). Na Vercel a VERCEL_URL já vem pronta.
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+
 export const metadata = {
+  metadataBase: new URL(siteUrl),
   title: "KAMIKAZE 神風 — Equipe",
   description:
     "Site oficial da equipe Kamikaze: entrega de farm, chat do esquadrão e membros.",
+  openGraph: {
+    title: "KAMIKAZE 神風 — Equipe",
+    description:
+      "Site oficial da equipe Kamikaze: entrega de farm, chat do esquadrão e membros.",
+    type: "website",
+    locale: "pt_BR",
+  },
 };
 
 export default function RootLayout({ children }) {
