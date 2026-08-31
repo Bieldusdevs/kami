@@ -84,19 +84,26 @@ falha**. Faça nesta ordem:
 3. **Salve e faça um Redeploy**: variável de ambiente só vale para deploys
    novos (Deployments → ⋯ → **Redeploy**).
 
-**3) Criar as tabelas no banco (só uma vez)**
+**3) Criar as tabelas no banco**
 
-Opção fácil, sem instalar nada: no seu computador, com Node instalado:
+✅ **Na prática você não precisa fazer nada**: na primeira vez que o site
+precisar do banco, ele mesmo cria as tabelas que estiverem faltando
+(`CREATE TABLE IF NOT EXISTS` — ver `lib/ensureTables.js`). É seguro, não
+apaga nada e roda uma vez por instância.
+
+Se mesmo assim preferir criar antes, rode no seu computador (Node instalado):
 
 ```bash
 npx prisma db push
-# quando perguntar, ou se preferir direto:
+# ou, sem precisar mexer no .env:
 DATABASE_URL="postgresql://usuario:senha@ep-xxx.neon.tech/neondb?sslmode=require" npx prisma db push
 ```
 
-> Alternativa sem terminal: Vercel → **Settings** → **Build & Development
-> Settings** → *Build Command* → `npx prisma db push && npm run build`, faça o
-> deploy e depois **volte o Build Command para o padrão**.
+> ⚠️ **Nunca coloque `prisma db push` no Build Command da Vercel.** Ele é
+> interativo (para e espera uma resposta) e o `next build` acaba nunca
+> rodando — o deploy então falha com *"The Next.js output directory .next was
+> not found"*. O Build Command correto é somente `npm run build`, e ele já
+> vem travado no `vercel.json` deste repositório.
 
 **4) Conferir**
 
@@ -112,7 +119,8 @@ Se algum item vier diferente de `ok`, a tabela da
 ### Opção A — pelo painel da Vercel
 1. Suba esta pasta para um repositório no GitHub (ou GitLab/Bitbucket).
 2. Em [vercel.com/new](https://vercel.com/new), importe o repositório.
-3. A Vercel detecta Next.js automaticamente — não precisa mudar build command.
+3. A Vercel detecta Next.js automaticamente — e o `vercel.json` já fixa o
+   Build Command em `npm run build` (não mude).
 4. Em **Environment Variables**, adicione:
    - `DATABASE_URL` — sua connection string do Postgres
    - `JWT_SECRET` — um valor aleatório forte
@@ -173,6 +181,8 @@ lib/
   apiAuth.js                  Permissões das rotas (requireUser/Staff/Dono)
   roles.js                    Cargos: Dono, Subdono, Gerente, Membro
   settings.js                 Configurações do site editáveis pelo painel
+  ensureTables.js            Cria as tabelas que faltarem no primeiro uso
+  schemaSql.js               SQL das tabelas embutido no código (usado pelo ensureTables)
   settingsShared.js         Padrões/helpers de configuração (sem Prisma, usável no navegador)
   clientApi.js                fetch seguro usado pelos componentes
 scripts/check-env.mjs        `npm run check` — diagnóstico do ambiente
@@ -220,7 +230,9 @@ Quase todo "erro ao entrar / ao cadastrar" vem de uma destas causas — abra
 | `Muitas tentativas. Aguarde um minuto` (`RATE_LIMIT`) | mais de 10 logins (ou 5 cadastros) por minuto no mesmo IP | espere 1 minuto e tente de novo |
 | Entra, mas volta para deslogado | cookie de sessão com `Secure` em site HTTP | sirva o site em HTTPS ou defina `KAMI_COOKIE_SECURE=0` |
 | O botão "Painel" não aparece | seu cargo ainda é Membro | defina `OWNER_USERNAME` com seu usuário e faça Redeploy (ou `npm run set-role -- seu_usuario Dono`) |
-| Painel abre mas não salva nada | tabelas novas (`Command`, `DownloadFile`, `Setting`) não criadas | rode `npx prisma db push` de novo |
+| `The Next.js output directory ".next" was not found` | o Build Command foi trocado por `npx prisma db push` (ou ele travou antes do `next build`) | deixe o Build Command como **`npm run build`** e faça um Redeploy |
+| Build fica parado em `Running "npx prisma db push"` | o `db push` é interativo e espera uma resposta que nunca vem | tire o `db push` do Build Command — as tabelas são criadas sozinhas pelo site |
+| Painel abre mas não salva nada | tabelas novas (`Command`, `DownloadFile`, `Setting`) não existem e o site não conseguiu criá-las | abra `/api/health` (ele diz quais faltam); se o usuário do banco não pode criar tabelas, rode `npx prisma db push` uma vez |
 | `Upload desativado` ao enviar arquivo | Vercel Blob não ativado | ative em Vercel → Storage → Blob, ou cadastre o arquivo por link |
 
 Comandos úteis:
@@ -311,13 +323,15 @@ Para enviar o arquivo direto pelo painel, ative o **Vercel Blob** no projeto
 variáveis e o botão de upload passa a funcionar. Limite: ~4,5 MB por arquivo
 nas funções da Vercel — para arquivos maiores, use links.
 
-### Novas tabelas
+### Novas tabelas (o site cria sozinho)
 
-Esta versão adicionou `Command`, `DownloadFile` e `Setting`. Depois de
-atualizar o código, rode mais uma vez:
+Esta versão adicionou `Command`, `DownloadFile` e `Setting`. **Não é preciso
+fazer nada**: o site cria as que faltarem na primeira vez que o banco for
+usado (`lib/ensureTables.js`).
+
+Se preferir criar antes (ou se o usuário do banco não tiver permissão de
+criar tabelas), rode uma vez no seu computador:
 
 ```bash
 npx prisma db push
 ```
-
-(sem isso, o `/api/health` acusa `Tabelas pendentes` e o painel não salva nada)
