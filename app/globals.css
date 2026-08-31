@@ -1,0 +1,68 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+::selection {
+  background: #2f6fed;
+  color: #fff;
+}
+
+::-webkit-scrollbar {
+  width: 9px;
+}
+::-webkit-scrollbar-track {
+  background: #05070c;
+}
+::-webkit-scrollbar-thumb {
+  background: #1c2740;
+}
+
+.bg-grid {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: linear-gradient(rgba(120, 165, 255, 0.14) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120, 165, 255, 0.14) 1px, transparent 1px);
+  background-size: 64px 64px;
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%);
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%);
+  opacity: 0.5;
+}
+
+.hero-kanji {
+  position: absolute;
+  right: -40px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: "Zen Kaku Gothic New", sans-serif;
+  font-weight: 900;
+  font-size: min(46vw, 620px);
+  line-height: 1;
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(120, 165, 255, 0.32);
+  user-select: none;
+  z-index: 0;
+  animation: drift 14s ease-in-out infinite;
+}
+
+@keyframes drift {
+  0%,
+  100% {
+    transform: translateY(-50%) translateX(0);
+  }
+  50% {
+    transform: translateY(-52%) translateX(-10px);
+  }
+}
+
+@media (max-width: 860px) {
+  .hero-kanji {
+    font-size: 70vw;
+    opacity: 0.5;
+  }
+}

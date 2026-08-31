@@ -1,0 +1,62 @@
+// ███╗   ██╗ ██████╗ ██╗   ██╗ █████╗ ██╗  ██╗███████╗
+// ████╗  ██║██╔═══██╗██║   ██║██╔══██╗██║ ██╔╝╚══███╔╝
+// ██╔██╗ ██║██║   ██║██║   ██║███████║█████╔╝   ███╔╝
+// ██║╚██╗██║██║   ██║╚██╗ ██╔╝██╔══██║██╔═██╗  ███╔╝
+// ██║ ╚████║╚██████╔╝ ╚████╔╝ ██║  ██║██║  ██╗███████╗
+// ╚═╝  ╚═══╝ ╚═════╝   ╚═══╝  ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝
+// Projeto KAMIKAZE 神風 — criado por NOVAK.
+
+// Schema do banco de dados da Kamikaze
+// Funciona com qualquer Postgres (Vercel Postgres, Neon, Supabase, Railway...)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  username     String    @unique
+  usernameLower String   @unique
+  email        String    @unique
+  passwordHash String
+  role         String    @default("Membro")
+  createdAt    DateTime  @default(now())
+
+  messages Message[]
+  orders   Order[]
+
+  @@index([usernameLower])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  text      String
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+}
+
+model Order {
+  id        String   @id @default(cuid())
+  game      String
+  item      String
+  qty       String
+  notes     String?
+  status    String   @default("pendente") // pendente | andamento | concluido
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([status])
+}
