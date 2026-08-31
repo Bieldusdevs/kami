@@ -6,12 +6,16 @@
     "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "next start",
-    "postinstall": "prisma generate",
-    "db:push": "prisma db push",
-    "db:studio": "prisma studio"
+    "postinstall": "prisma generate || exit 0",
+    "db:push": "prisma db push --skip-generate",
+    "check": "node scripts/check-env.mjs",
+    "set-role": "node scripts/set-role.mjs",
+    "db:studio": "prisma studio",
+    "db:reset": "prisma db push --force-reset --skip-generate"
   },
   "dependencies": {
     "@prisma/client": "^5.19.1",
+    "@vercel/blob": "^2.8.0",
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.2",
     "next": "14.2.35",

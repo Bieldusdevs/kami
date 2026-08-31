@@ -10,9 +10,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSettings } from "@/context/SettingsContext";
 
 export default function Hero() {
   const [stats, setStats] = useState({ members: "—", orders: "—" });
+  const { settings } = useSettings();
+  const subtitle =
+    settings["site.heroSubtitle"] ||
+    "A Kamikaze é uma equipe formada para dominar o farm, o ranking e a comunicação — tudo em um só lugar.";
 
   useEffect(() => {
     let cancelled = false;
@@ -55,9 +60,7 @@ export default function Hero() {
           <br />como a lâmina.
         </h1>
         <p className="text-[17px] text-muted leading-relaxed max-w-[480px] mb-10">
-          A Kamikaze é uma equipe formada para dominar o farm, o ranking e a
-          comunicação — tudo em um só lugar. Peça sua entrega de farm,
-          converse com o time e acompanhe o esquadrão em tempo real.
+          {subtitle}
         </p>
         <div className="flex gap-4 flex-wrap">
           <a
@@ -67,10 +70,10 @@ export default function Hero() {
             Pedir entrega de farm
           </a>
           <a
-            href="#chat"
+            href="/arquivos"
             className="px-5 py-2.5 text-[13.5px] font-semibold border border-lineStrong hover:border-blue-bright hover:text-blue-glow transition-colors"
           >
-            Entrar no chat
+            Baixar arquivos
           </a>
         </div>
         <div className="flex gap-12 mt-16">
