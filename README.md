@@ -173,6 +173,7 @@ lib/
   apiAuth.js                  Permissões das rotas (requireUser/Staff/Dono)
   roles.js                    Cargos: Dono, Subdono, Gerente, Membro
   settings.js                 Configurações do site editáveis pelo painel
+  settingsShared.js         Padrões/helpers de configuração (sem Prisma, usável no navegador)
   clientApi.js                fetch seguro usado pelos componentes
 scripts/check-env.mjs        `npm run check` — diagnóstico do ambiente
 prisma/schema.prisma         Modelos User, Message, Order

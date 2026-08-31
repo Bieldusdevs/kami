@@ -9,7 +9,7 @@
  */
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { fileSchema } from "@/lib/validation";
+import { fileSchema, zodMessage } from "@/lib/validation";
 import { requireUser, requireStaff } from "@/lib/apiAuth";
 import { errorResponse } from "@/lib/apiErrors";
 
@@ -47,7 +47,7 @@ export async function POST(req) {
     const parsed = fileSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message || "Dados inválidos.", code: "VALIDATION" },
+        { error: zodMessage(parsed.error, "Dados inválidos."), code: "VALIDATION" },
         { status: 400 }
       );
     }

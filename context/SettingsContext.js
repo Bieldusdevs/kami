@@ -10,7 +10,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { defaultSettings, parseGames } from "@/lib/settings";
+import { defaultSettings, parseGames } from "@/lib/settingsShared";
 
 const SettingsContext = createContext(null);
 

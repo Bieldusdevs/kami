@@ -10,7 +10,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionUserId } from "@/lib/auth";
-import { messageSchema } from "@/lib/validation";
+import { messageSchema, zodMessage } from "@/lib/validation";
 import { rateLimit, getClientKey } from "@/lib/rateLimit";
 import { errorResponse } from "@/lib/apiErrors";
 
@@ -65,7 +65,7 @@ export async function POST(req) {
     const parsed = messageSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message || "Mensagem inválida.", code: "VALIDATION" },
+        { error: zodMessage(parsed.error, "Mensagem inválida."), code: "VALIDATION" },
         { status: 400 }
       );
     }
